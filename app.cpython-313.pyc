@@ -1,0 +1,9 @@
+DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
+SECRET_KEY=change-this-secret-key
+SIMILARITY_THRESHOLD=90
+MAX_FUZZY_CANDIDATES=300
+DB_SSLMODE=require
+FRONTEND_ORIGIN=https://your-frontend.vercel.app
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+TOKEN_HOURS=12

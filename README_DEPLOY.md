@@ -1,96 +1,57 @@
-# Duplicate Checker Deployment Guide
+# Duplicate Grantee Checker Deployment Guide
 
-This project is now split into:
+## Stack
+- Frontend: Vercel (`frontend/`)
+- Backend: Render (`backend/`)
+- Database: Neon PostgreSQL
 
-- `backend/` -> FastAPI API for Render
-- `frontend/` -> static UI for Vercel
-- Database -> Neon PostgreSQL
+## Important app rules
+- Upload file columns: `LastName`, `FirstName`, `MiddleName`
+- Dropdown metadata is selected in the UI
+- Duplicate checking only happens within the same:
+  - HEI
+  - Scholarship
+  - Academic Year
+  - Semester
+- Batch is saved and displayed, but it does not control duplicate matching
 
-## 1) Neon
+## Backend deploy (Render)
+1. Push this project to GitHub.
+2. Create a new Render Web Service.
+3. Set **Root Directory** to `backend`.
+4. Use:
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+5. Add environment variables:
+   - `DATABASE_URL`
+   - `SECRET_KEY`
+   - `SIMILARITY_THRESHOLD=90`
+   - `MAX_FUZZY_CANDIDATES=300`
+   - `DB_SSLMODE=require`
+   - `FRONTEND_ORIGIN=https://your-frontend.vercel.app`
+   - `ADMIN_USERNAME=admin`
+   - `ADMIN_PASSWORD=admin123`
+6. Deploy and test `/api/healthz`.
 
-Create a Neon project, then copy the connection string.
+## Frontend deploy (Vercel)
+1. Import the same GitHub repo into Vercel.
+2. Set **Root Directory** to `frontend`.
+3. Edit `frontend/index.html` and replace:
+   - `https://your-render-backend.onrender.com`
+   with your actual Render backend URL.
+4. Deploy.
 
-Example:
+## Admin login
+Default admin credentials are controlled by environment variables:
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
 
-```env
-DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
-```
+Change them in Render before you go live.
 
-## 2) Render backend
+## Master data
+The backend seeds:
+- the HEI list provided by the user
+- Scholarship options: `TES`, `TDP`
+- Semester options: `1ST SEM`, `2ND SEM`
 
-Create a new **Web Service** from the `backend` folder.
-
-Use these settings:
-
-- Root Directory: `backend`
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-
-Add environment variables:
-
-```env
-DATABASE_URL=your_neon_connection_string
-DB_SSLMODE=require
-SIMILARITY_THRESHOLD=90
-MAX_FUZZY_CANDIDATES=300
-FRONTEND_ORIGIN=https://your-frontend.vercel.app
-```
-
-Test after deploy:
-
-- `https://your-render-app.onrender.com/api/healthz`
-- `https://your-render-app.onrender.com/api/uploads`
-
-## 3) Vercel frontend
-
-In `frontend/index.html`, replace this line value:
-
-```js
-API_BASE_URL: "https://your-render-backend.onrender.com"
-```
-
-with your real Render URL.
-
-Then deploy the `frontend` folder to Vercel.
-
-Recommended Vercel settings:
-
-- Framework Preset: `Other`
-- Root Directory: `frontend`
-
-## 4) How it works now
-
-- Frontend uploads the Excel file to `POST /api/uploads`
-- Backend reads the file, stores results in Neon, and returns an `upload_id`
-- Frontend loads history from `GET /api/uploads`
-- Frontend loads results from `GET /api/uploads/{upload_id}`
-- Frontend deletes uploads through `DELETE /api/uploads/{upload_id}`
-
-## 5) Required Excel columns
-
-- LastName
-- FirstName
-- MiddleName
-- Scholarship
-- AcademicYear
-- Semester
-- HEI
-
-## 6) Local testing
-
-Backend:
-
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app:app --reload
-```
-
-Frontend:
-
-Open `frontend/index.html` with Live Server, or any static server.
-
-## 7) Important note
-
-The frontend is now separate from the backend, so `fetch("/upload")` is no longer used.
-All requests go to the Render API base URL.
+Academic Year and Batch are managed from the admin panel.

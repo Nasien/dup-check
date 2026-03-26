@@ -369,6 +369,29 @@ def seed_master_options(db: Session) -> None:
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
     with engine.begin() as conn:
+        # Backfill columns for older databases before creating indexes.
+        conn.execute(text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS hei VARCHAR"))
+        conn.execute(text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS scholarship VARCHAR"))
+        conn.execute(text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS academic_year VARCHAR"))
+        conn.execute(text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS semester VARCHAR"))
+        conn.execute(text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS batch VARCHAR"))
+        conn.execute(text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'Needs review'"))
+
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS scholarship VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS batch VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS hei VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS duplicate VARCHAR DEFAULT 'NO'"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS duplicate_with_name VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS duplicate_with_hei VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS duplicate_with_scholarship VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS duplicate_with_batch VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS match_type VARCHAR"))
+        conn.execute(text("ALTER TABLE grantees ADD COLUMN IF NOT EXISTS match_score DOUBLE PRECISION"))
+
+        conn.execute(text("ALTER TABLE master_options ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"))
+        conn.execute(text("ALTER TABLE master_options ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"))
+        conn.execute(text("UPDATE master_options SET created_at = NOW() WHERE created_at IS NULL"))
+
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_grantees_scope ON grantees (hei, scholarship, academic_year, semester)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_grantees_upload ON grantees (upload_id)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_grantees_name ON grantees (full_name)"))

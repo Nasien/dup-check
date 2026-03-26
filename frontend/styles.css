@@ -176,3 +176,24 @@ th { color: var(--muted); font-size: 13px; }
   .topbar, .toolbar, .panel-head, .inline-form { flex-direction: column; align-items: stretch; }
   .main-content { padding: 18px; }
 }
+select,
+.select-input {
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  appearance: auto;
+}
+
+select option {
+  background: #ffffff;
+  color: #111827;
+}
+
+:root[data-theme='light'] select option {
+  background: #ffffff;
+  color: #111827;
+}
+
+:root:not([data-theme='light']) select option {
+  background: #0f172a;
+  color: #f8fafc;
+}
